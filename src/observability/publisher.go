@@ -20,11 +20,11 @@ func ProcessSystemSummary() {
 	tempSummarizerMap := common.MoveMap(SummarizerMap)
 	SummarizerMapMutex.Unlock()
 
-	var ProcessSystemSummaryWg sync.WaitGroup
-
 	if cfg.GetCfgObservabilityWriteToDB() {
+		var ProcessSystemSummaryWg sync.WaitGroup
 		ProcessSystemSummaryWg.Add(1)
 		go UpsertSummaryCronJob(tempSummarizerMap, &ProcessSystemSummaryWg)
+		ProcessSystemSummaryWg.Wait()
 	}
 
 	if cfg.GetCfgPublisherEnable() {
@@ -54,7 +54,6 @@ func ProcessSystemSummary() {
 		log.Info().Msgf("Published %v events in %v", count, time.Since(initTime))
 		PublisherMutex.Unlock()
 	}
-	ProcessSystemSummaryWg.Wait()
 }
 
 func aggregateSummaryMap(summaryMap map[types.SystemSummary]types.SysSummaryTimeCount) {
